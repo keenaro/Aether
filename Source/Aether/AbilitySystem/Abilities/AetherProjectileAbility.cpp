@@ -21,7 +21,7 @@ void UAetherProjectileAbility::ActivateAbility(const FGameplayAbilitySpecHandle 
 		EndAbility(CurrentSpecHandle, CurrentActorInfo, CurrentActivationInfo, true, true);
 	}
 
-	const auto* Camera = Character->GetCamera();
+	const auto* Camera = Character->GetCameraComponent();
 	const auto CameraTransform = Camera->GetComponentTransform();
 	const auto CameraForward = Camera->GetForwardVector();
 	const FVector Start = Camera->GetComponentLocation();

@@ -3,6 +3,7 @@
 #include "CoreMinimal.h"
 #include "GameFramework/Character.h"
 #include "Aether/Aether.h"
+#include "Components/InventoryComponent.h"
 #include "AetherCharacter.generated.h"
 
 DECLARE_DELEGATE_OneParam(FInputBool, bool);
@@ -24,15 +25,19 @@ public:
 // Getters
 public:
 	UAetherAbilitySystemComponent* GetAbilitySystemComponent() const { return AbilitySystemComponent.Get(); };
-	UCameraComponent* GetCamera() const { return Camera; }
+	UCameraComponent* GetCameraComponent() const { return CameraComponent; }
 
 public:
 	bool IsAlive() const;
 	int GetCharacterLevel() const { return 1; };
 	int GetAbilityLevel(EAetherAbilityInputID AbilityID) const { return 1; };
 
+// Set Functions
 public:
 	void SetHealth(float value);
+
+	UFUNCTION(Server, Reliable, BlueprintCallable)
+	void SetInventoryItem(UInventoryComponent* inventoryTarget, int index, const FItem newItem);
 
 public:
 	void PossessedBy(AController* NewController) override;
@@ -51,16 +56,35 @@ protected:
 	void MoveRight(float Value);
 	void ToggleCrouch(bool doCrouch);
 
-protected:
-	TWeakObjectPtr<UAetherAbilitySystemComponent> AbilitySystemComponent;
-	TWeakObjectPtr<UAetherAttributeSet> AttributeSet;
+	void GetLifetimeReplicatedProps(TArray<FLifetimeProperty >& OutLifetimeProps) const override;
 
-	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = Camera, meta = (AllowPrivateAccess = "true"))
-	UCameraComponent* Camera;
+protected:
+	TWeakObjectPtr<UAetherAttributeSet> AttributeSet;
 
 	UPROPERTY(BlueprintReadOnly, EditDefaultsOnly, Category = "Abilities")
 	TSubclassOf<UGameplayEffect> DefaultAttributes;
 
 	UPROPERTY(BlueprintReadOnly, EditAnywhere, Category = "Abilities")
 	TArray<TSubclassOf<UAetherGameplayAbility>> Abilities;
+
+// Components
+protected:
+	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = Camera, meta = (AllowPrivateAccess = "true"))
+	UCameraComponent* CameraComponent;
+
+	UPROPERTY(BlueprintReadOnly, EditDefaultsOnly, Replicated, meta = (AllowPrivateAccess = "true"))
+	UInventoryComponent* InventoryComponent;
+
+	TWeakObjectPtr<UAetherAbilitySystemComponent> AbilitySystemComponent;
+
+//Exec Functions
+public:
+	UFUNCTION(Exec)
+	void AddItem(FName name, int quantity = 1);
+
+	UFUNCTION(Server, Reliable, BlueprintCallable)
+	void Server_AddItem(FName name, int quantity);
+
+	UFUNCTION(Exec)
+	void ClearInventory();
 };

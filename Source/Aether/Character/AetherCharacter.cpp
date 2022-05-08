@@ -5,18 +5,20 @@
 #include "Aether/Player/AetherPlayerState.h"
 #include "Camera/CameraComponent.h"
 #include "GameFramework/CharacterMovementComponent.h"
+#include "Net/UnrealNetwork.h"
 
 AAetherCharacter::AAetherCharacter()
 {
 	PrimaryActorTick.bCanEverTick = true;
 
-	Camera = CreateDefaultSubobject<UCameraComponent>(TEXT("Camera Component"));
-	Camera->SetWorldLocation(FVector(0, 0, 70));
-	Camera->SetupAttachment(RootComponent);
-	Camera->bUsePawnControlRotation = true;
+	CameraComponent = CreateDefaultSubobject<UCameraComponent>(TEXT("Camera Component"));
+	CameraComponent->SetWorldLocation(FVector(0, 0, 70));
+	CameraComponent->SetupAttachment(RootComponent);
+	CameraComponent->bUsePawnControlRotation = true;
 	GetMesh()->SetOwnerNoSee(true);
 	Cast<UCharacterMovementComponent>(GetMovementComponent())->NavAgentProps.bCanCrouch = true;
 
+	InventoryComponent = CreateDefaultSubobject<UInventoryComponent>(TEXT("Inventory Component"));
 }
 
 void AAetherCharacter::SetupPlayerInputComponent(class UInputComponent* PlayerInputComponent)
@@ -50,6 +52,13 @@ void AAetherCharacter::ToggleCrouch(bool doCrouch)
 {
 	if (doCrouch) Crouch();
 	else UnCrouch();
+}
+
+void AAetherCharacter::GetLifetimeReplicatedProps(TArray<FLifetimeProperty >& OutLifetimeProps) const
+{
+	Super::GetLifetimeReplicatedProps(OutLifetimeProps);
+
+	DOREPLIFETIME(AAetherCharacter, InventoryComponent);
 }
 
 bool AAetherCharacter::IsAlive() const
@@ -123,4 +132,28 @@ void AAetherCharacter::InitialiseAbilities()
 	AbilitySystemComponent->InitialiseAbilities(this, Abilities);
 }
 
+void AAetherCharacter::SetInventoryItem_Implementation(UInventoryComponent* inventoryTarget, int index, const FItem newItem)
+{
+	inventoryTarget->SetInventoryItem(index, newItem);
+}
+
+void AAetherCharacter::AddItem(FName name, int quantity)
+{
+	if (IsNetMode(NM_ListenServer))
+	{
+		FItem item(name, quantity);
+		InventoryComponent->AddItem(item);
+	}
+	else Server_AddItem(name, quantity);
+}
+
+void AAetherCharacter::Server_AddItem_Implementation(FName name, int quantity)
+{
+	AddItem(name, quantity);
+}
+
+void AAetherCharacter::ClearInventory()
+{
+	InventoryComponent->ClearInventory();
+}
 
