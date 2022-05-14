@@ -22,22 +22,18 @@ void UAetherProjectileAbility::ActivateAbility(const FGameplayAbilitySpecHandle 
 	}
 
 	const auto* Camera = Character->GetCameraComponent();
-	const auto CameraTransform = Camera->GetComponentTransform();
-	const auto CameraForward = Camera->GetForwardVector();
-	const FVector Start = Camera->GetComponentLocation();
-	const FVector End = Start + CameraForward * Range;
-	const FRotator Rotation = UKismetMathLibrary::FindLookAtRotation(Start, End);
+	const auto SpawnTransform = FTransform(Character->GetBaseAimRotation(), Camera->GetComponentLocation(), FVector::OneVector);
 
-	FGameplayEffectSpecHandle DamageEffectSpecHandle = MakeOutgoingGameplayEffectSpec(DamageGameplayEffect, GetAbilityLevel());
-
+	FGameplayEffectSpecHandle DamageEffectSpecHandle = MakeOutgoingGameplayEffectSpec(Handle, ActorInfo, ActivationInfo, DamageGameplayEffect, GetAbilityLevel());
 	// Pass the damage to the Damage Execution Calculation through a SetByCaller value on the GameplayEffectSpec
 	DamageEffectSpecHandle.Data.Get()->SetSetByCallerMagnitude(FGameplayTag::RequestGameplayTag(FName("Data.Damage")), Damage);
 
 	FActorSpawnParameters SpawnParameters;
 	SpawnParameters.SpawnCollisionHandlingOverride = ESpawnActorCollisionHandlingMethod::AlwaysSpawn;
 
-	auto* Projectile = GetWorld()->SpawnActorDeferred<AAetherProjectile>(ProjectileClass, CameraTransform, GetOwningActorFromActorInfo(), Character, ESpawnActorCollisionHandlingMethod::AlwaysSpawn);
+	AAetherProjectile* Projectile = GetWorld()->SpawnActorDeferred<AAetherProjectile>(ProjectileClass, SpawnTransform, GetOwningActorFromActorInfo(), Character, ESpawnActorCollisionHandlingMethod::AlwaysSpawn);
 	Projectile->DamageEffectSpecHandle = DamageEffectSpecHandle;
-	Projectile->Range = Range;
-	Projectile->FinishSpawning(CameraTransform);
+	Projectile->FinishSpawning(SpawnTransform);
+
+	EndAbility(CurrentSpecHandle, CurrentActorInfo, CurrentActivationInfo, true, true);
 }

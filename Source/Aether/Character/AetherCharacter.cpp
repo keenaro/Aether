@@ -36,6 +36,8 @@ void AAetherCharacter::SetupPlayerInputComponent(class UInputComponent* PlayerIn
 	PlayerInputComponent->BindAction("Jump", IE_Pressed, this, &AAetherCharacter::Jump);
 	PlayerInputComponent->BindAction<FInputBool>("Crouch", IE_Pressed, this, &AAetherCharacter::ToggleCrouch, true);
 	PlayerInputComponent->BindAction<FInputBool>("Crouch", IE_Released, this, &AAetherCharacter::ToggleCrouch, false);
+
+	BindASCInput();
 }
 
 void AAetherCharacter::MoveForward(float value)
@@ -78,7 +80,7 @@ void AAetherCharacter::PossessedBy(AController* NewController)
 {
 	Super::PossessedBy(NewController);
 	InitialiseAbilitySystem();
-
+	InitialiseAbilities();
 	SetOwner(NewController);
 }
 
@@ -86,6 +88,7 @@ void AAetherCharacter::OnRep_PlayerState()
 {
 	Super::OnRep_PlayerState();
 	InitialiseAbilitySystem();
+	BindASCInput();
 }
 
 void AAetherCharacter::InitialiseAbilitySystem()
@@ -99,6 +102,11 @@ void AAetherCharacter::InitialiseAbilitySystem()
 		SetHealth(AttributeSet->GetMaxHealth());
 	}
 }
+
+UAbilitySystemComponent* AAetherCharacter::GetAbilitySystemComponent() const
+{ 
+	return AbilitySystemComponent.Get(); 
+};
 
 void AAetherCharacter::InitialiseAttributes()
 {
@@ -157,3 +165,13 @@ void AAetherCharacter::ClearInventory()
 	InventoryComponent->ClearInventory();
 }
 
+void AAetherCharacter::BindASCInput()
+{
+	if (!ASCInputBound && AbilitySystemComponent.IsValid() && IsValid(InputComponent))
+	{
+		AbilitySystemComponent->BindAbilityActivationToInputComponent(InputComponent, FGameplayAbilityInputBinds(FString("ConfirmTarget"),
+			FString("CancelTarget"), FString("EAetherAbilityInputID"), static_cast<int32>(EAetherAbilityInputID::Confirm), static_cast<int32>(EAetherAbilityInputID::Cancel)));
+
+		ASCInputBound = true;
+	}
+}

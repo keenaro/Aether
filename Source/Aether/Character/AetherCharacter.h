@@ -4,6 +4,8 @@
 #include "GameFramework/Character.h"
 #include "Aether/Aether.h"
 #include "Components/InventoryComponent.h"
+#include "AbilitySystemInterface.h"
+#include "AbilitySystemComponent.h"
 #include "AetherCharacter.generated.h"
 
 DECLARE_DELEGATE_OneParam(FInputBool, bool);
@@ -15,7 +17,7 @@ class UGameplayEffect;
 class UCameraComponent;
 
 UCLASS()
-class AETHER_API AAetherCharacter : public ACharacter
+class AETHER_API AAetherCharacter : public ACharacter, public IAbilitySystemInterface
 {
 	GENERATED_BODY()
 
@@ -23,15 +25,15 @@ public:
 	AAetherCharacter();
 
 // Getters
-public:
-	UAetherAbilitySystemComponent* GetAbilitySystemComponent() const { return AbilitySystemComponent.Get(); };
+public: 
+	UAbilitySystemComponent* GetAbilitySystemComponent() const override;
 	UCameraComponent* GetCameraComponent() const { return CameraComponent; }
 
 public:
 	bool IsAlive() const;
 	int GetCharacterLevel() const { return 1; };
 	int GetAbilityLevel(EAetherAbilityInputID AbilityID) const { return 1; };
-
+	
 // Set Functions
 public:
 	void SetHealth(float value);
@@ -51,6 +53,7 @@ protected:
 	void InitialiseAbilitySystem();
 	void InitialiseAttributes();
 	void InitialiseAbilities();
+	void BindASCInput();
 
 	void MoveForward(float Value);
 	void MoveRight(float Value);
@@ -76,6 +79,9 @@ protected:
 	UInventoryComponent* InventoryComponent;
 
 	TWeakObjectPtr<UAetherAbilitySystemComponent> AbilitySystemComponent;
+
+private:
+	bool ASCInputBound = false;
 
 //Exec Functions
 public:

@@ -19,9 +19,6 @@ public:
 	TSubclassOf<UGameplayEffect> DamageGameplayEffect;
 
 	UPROPERTY(BlueprintReadOnly, EditAnywhere)
-	float Range;
-
-	UPROPERTY(BlueprintReadOnly, EditAnywhere)
 	float Damage;
 
 protected:

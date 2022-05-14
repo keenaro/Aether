@@ -133,6 +133,7 @@ void UAetherAttributeSet::PostGameplayEffectExecute(const FGameplayEffectModCall
 				if (!TargetCharacter->IsAlive())
 				{
 					UE_LOG(LogTemp, Log, TEXT("%s Died"), *GetOwningActor()->GetName());
+					TargetCharacter->Destroy();
 				}
 			}
 		}
